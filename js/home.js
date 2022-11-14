@@ -1,6 +1,6 @@
 import axiosClient from './api/axiosClient';
 import postApi from './api/postAPI';
-import { setTextParent, setThumnailParent, truncateText } from './utils';
+import { getUlPaginationElement, setTextParent, setThumnailParent, truncateText } from './utils';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -50,6 +50,9 @@ function renderPostList(postList) {
   const ulElement = document.getElementById('postList');
   if (!ulElement) return;
 
+  //clear current post list
+  ulElement.textContent = '';
+
   // loop postList
   postList.forEach((post, index) => {
     const liElement = createPostElement(post);
@@ -58,7 +61,7 @@ function renderPostList(postList) {
 }
 
 function renderPagination(pagination) {
-  const ulPagination = document.getElementById('pagination');
+  const ulPagination = getUlPaginationElement();
   console.log('testtttt', ulPagination);
   if (!pagination || !ulPagination) return;
 
@@ -81,27 +84,53 @@ function renderPagination(pagination) {
 function handlePrevClick(event) {
   event.preventDefault();
   console.log('prev click');
+
+  const ulPagination = getUlPaginationElement();
+  if (!ulPagination) return;
+
+  const page = Number.parseInt(ulPagination.dataset.page) || 1;
+  if (page <= 1) return;
+
+  handleFilterChange('_page', page - 1);
 }
 
 function handleNextClick(event) {
   event.preventDefault();
   console.log('next click');
+
+  const ulPagination = getUlPaginationElement();
+  if (!ulPagination) return;
+
+  const page = Number.parseInt(ulPagination.dataset.page) || 1;
+  const totalPages = ulPagination.dataset.totalPages;
+
+  if (page >= totalPages) return;
+
+  handleFilterChange('_page', page + 1);
 }
 
-function handleFilterChange(filterName, filterValue) {
-  //update query params
-  const url = new URL(window.location);
-  url.searchParams.set(filterName, filterValue);
-  history.pushState({}, '', url);
+async function handleFilterChange(filterName, filterValue) {
+  try {
+    //update query params
+    const url = new URL(window.location);
+    url.searchParams.set(filterName, filterValue);
+    history.pushState({}, '', url);
 
-  //fetch API
+    //fetch API
+    //re-render post list
 
-  //re-render post list
+    const { data, pagination } = await postApi.getAll(url.searchParams);
+
+    renderPostList(data);
+    renderPagination(pagination);
+  } catch (error) {
+    console.log('failed to fetch post list', error);
+  }
 }
 
 function initPagination() {
   //bind click event for prev/next link
-  const ulPagination = document.getElementById('pagination');
+  const ulPagination = getUlPaginationElement();
   if (!ulPagination) return;
 
   //add click event for prev link
@@ -129,9 +158,13 @@ function initURL() {
 
 (async () => {
   try {
+    //attach click event for links
     initPagination();
+
+    //set default pagination (_page, _limit) on URL
     initURL();
 
+    //render post list based URL params
     const queryParams = new URLSearchParams(window.location.search);
 
     //set default query params if not existed
