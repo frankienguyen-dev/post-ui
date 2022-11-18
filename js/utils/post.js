@@ -1,6 +1,6 @@
-import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { setTextParent, setThumnailParent, truncateText } from './common';
+import { setTextParent, truncateText } from './common';
+import dayjs from 'dayjs';
 
 // to use fromNow function
 dayjs.extend(relativeTime);
@@ -27,9 +27,22 @@ export function createPostElement(post) {
   //calculate timespan
   setTextParent(liElement, '[data-id = "timeSpan"]', ` - ${dayjs(post.updateAt).fromNow()}`);
 
-  setThumnailParent(liElement, '[data-id = "thumbnail"]', post.imageUrl);
+  const thumbnailElement = liElement.querySelector('[data-id = "thumbnail"]');
+  if (thumbnailElement) {
+    thumbnailElement.src = post.imageUrl;
+    thumbnailElement.addEventListener('error', () => {
+      thumbnailElement.src = 'https://via.placeholder.com/1368x400?text=thumbnails';
+    });
+  }
 
   //attach event
+  //go to post detail when click on div.post-item
+  const divElement = liElement.firstElementChild;
+  if (divElement) {
+    divElement.addEventListener('click', () => {
+      window.location.assign(`post-detail.html?id=${post.id}`);
+    });
+  }
 
   return liElement;
 }
