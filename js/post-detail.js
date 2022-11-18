@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import postApi from './api/postAPI';
-import { setTextParent } from './utils';
+import { registerLightbox, setTextParent } from './utils';
 
 //id="goToEditPageLink"
 //id="postHeroImage"
@@ -46,11 +46,12 @@ function renderPostDetail(post) {
   const editPageLink = document.getElementById('goToEditPageLink');
   if (editPageLink) {
     editPageLink.href = `/add-edit-post.html?id=${post.id}`;
-    editPageLink.innerHTML = '<i class="fas fa-edit"></i> Edit post'
+    editPageLink.innerHTML = '<i class="fas fa-edit"></i> Edit post';
   }
 }
 
 (async () => {
+  registerLightbox();
   try {
     // get post id from URL
     const searchParams = new URLSearchParams(window.location.search);
