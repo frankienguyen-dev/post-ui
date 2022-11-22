@@ -1,4 +1,5 @@
 import postApi from './api/postAPI';
+import { initPostForm } from './utils';
 
 (async () => {
   try {
@@ -15,9 +16,13 @@ import postApi from './api/postAPI';
     if (postId) {
       defaultValues = await postApi.getById(postId);
     }
-    console.log('id: ', postId);
-    console.log('mode: ', postId ? 'edit' : 'add');
-    console.log('defaultValues: ', defaultValues);
+  
+
+    initPostForm({
+      formId: 'postForm',
+      defaultValues,
+      onSubmit: (formValues) => console.log('submit', formValues),
+    })
   } catch (error) {
     console.log(error);
   }
